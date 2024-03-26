@@ -8,6 +8,7 @@ def resource_path(relative_path):
     base_path = os.getcwd()
     return glob(base_path + relative_path)
 
+
 def read_create(file_path, classes):
     with open(file_path, "r", encoding="utf-8") as file:
         csv_reader = csv.reader(file)
@@ -49,12 +50,10 @@ def read_create(file_path, classes):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
 
         self.configure(bg="#222222")
         self.title("Course Exam Finder")
-        self.minsize(screen_width//3, screen_height//5)
+        self.minsize(self.winfo_screenwidth()//3, self.winfo_screenheight()//5)
         style = ttk.Style(self)
         style.configure("TButton", font=(None, 16), background="#222222")
 
@@ -65,32 +64,36 @@ class App(tk.Tk):
         self.entry1.pack(padx=15, ipady=3, fill="x")
         self.entry1.insert(0, "Enter course codes")
         self.entry1.bind("<FocusIn>", lambda event: self.delet_entry(self.entry1))
+        self.entry1.bind("<FocusOut>", lambda event: self.put_placeholder(self.entry1, "Enter course codes"))
 
         self.entry2 = tk.Entry(self, font=(None, 18), fg="#eeeeee", insertbackground="#eeeeee", background="#2f2f2f")
         self.entry2.pack(padx=15, ipady=3, fill="x", pady=15)
         self.entry2.insert(0, "Enter CSV file name")
         self.entry2.bind("<FocusIn>", lambda event: self.delet_entry(self.entry2))
+        self.entry2.bind("<FocusOut>", lambda event: self.put_placeholder(self.entry2, "Enter CSV file name"))
 
         button = ttk.Button(self, text="Find", width=6, command=self.create_exam_file)
         button.pack(padx=20, ipady=5)
         self.bind("<Return>", lambda event: self.create_exam_file())
-    
+
     def delet_entry(self, entry):
         if entry.get() == "Enter course codes" or entry.get() == "Enter CSV file name" or entry.get() == "No CSV file found":
             entry.delete(0, tk.END)
+
+    def put_placeholder(self, entry, text):
+        if entry.get() == "":
+            entry.insert(0, text)
 
     def create_exam_file(self):
         course_codes = self.entry1.get()
         csv_name = self.entry2.get()
         file_path = resource_path("\*"+csv_name+"*.csv")
-        
         if not file_path:
             self.entry2.delete(0, tk.END)
             self.entry2.insert(0, "No CSV file found")
         else:
             read_create(file_path[0], course_codes)
             app.destroy()
-
 
 app = App()
 app.mainloop()
