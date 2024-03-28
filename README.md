@@ -1,6 +1,6 @@
 # Course Exam Finder
 
-Course Exam Finder is a python gui app made with ttk and [Azure](Azure/). To use it you need to have CEF and the midterm.csv file in the same directory after that you just enter all your courses and the csv filename and it will create an organised excel file with all your exems.
+Course Exam Finder is a python gui app made with ttk and [Azure/](https://github.com/rdbende/Azure-ttk-theme). To use it you need to have CEF and the midterm.csv file in the same directory after that you just enter all your courses and the csv filename and it will create an organised excel file with all your exems.
 
 ## Installation
 
