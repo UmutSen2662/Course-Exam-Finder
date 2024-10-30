@@ -9,6 +9,14 @@ def resource_path(relative_path):
     return glob(base_path + relative_path)
 
 
+def days_until(i):
+    return f"=MAX(DATEVALUE(LEFT(D{i}, 10)) - TODAY(), 0)"
+
+
+def days_between(i):
+    return f"=IFERROR(DATEVALUE(LEFT(D{i}, 10)) - DATEVALUE(LEFT(D{i-1}, 10)), B{i})"
+
+
 def read_create(file_path, classes):
     with open(file_path, "r", encoding="utf-8") as file:
         csv_reader = csv.reader(file)
@@ -16,35 +24,46 @@ def read_create(file_path, classes):
         workBook = openpyxl.Workbook()
         sheet = workBook.active
         sheet.column_dimensions['A'].width = 40.0
-        sheet.column_dimensions['B'].width = 50.0
-        sheet.column_dimensions['C'].width = 80.0
-        sheet.append(("Course Exam", "Start Time", "Classrooms"))
+        sheet.column_dimensions['B'].width = 20.0
+        sheet.column_dimensions['C'].width = 20.0
+        sheet.column_dimensions['D'].width = 50.0
+        sheet.column_dimensions['E'].width = 80.0
+        
+        sheet.append(("Course Exam", "Days Until", "Days Between", "Start Time", "Classrooms"))
         for cell in sheet[1]:
             cell.fill = openpyxl.styles.PatternFill(start_color="afafaf", fill_type="solid")
 
+        i = 2
         if "Final" in file_path:
             for row in csv_reader:
                 if row[0][:8].replace(" ","").upper() in classes.replace(" ","").upper():
-                    sheet.append((row[0], row[1] + " " + row[2][:5], row[3]))
+                    sheet.append((row[0], days_until(i), days_between(i), row[1] + " " + row[2][:5], row[3]))
+                    i += 1
         else:
             for row in csv_reader:
                 if row[0][:8].replace(" ","").upper() in classes.replace(" ","").upper():
-                    sheet.append((row[0], row[1], row[3]))
+                    sheet.append((row[0], days_until(i), days_between(i), row[1], row[3]))
+                    i += 1
 
         for row in sheet.iter_rows():
             for cell in row:
                 cell.font = openpyxl.styles.Font(size=16)
+                cell.alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
                 cell.border = openpyxl.styles.Border(left=openpyxl.styles.Side(border_style='medium', color='000000'),
                                                      right=openpyxl.styles.Side(border_style='medium', color='000000'),
                                                      top=openpyxl.styles.Side(border_style='medium', color='000000'),
                                                      bottom=openpyxl.styles.Side(border_style='medium', color='000000'))
 
+        savename = ""
         if "FINAL" in file_path.upper():
-            workBook.save('Finals.xlsx')
+            savename = "Finals"
         elif "MIDTERM" in file_path.upper():
-            workBook.save('Midterms.xlsx')
+            savename = "Midterms"
         else:
-            workBook.save('Exams.xlsx')
+            savename = "Exams"
+
+        workBook.save(f"{savename}.xlsx")
+        return savename
 
 
 class App(tk.Tk):
@@ -92,7 +111,8 @@ class App(tk.Tk):
             self.entry2.delete(0, tk.END)
             self.entry2.insert(0, "No CSV file found")
         else:
-            read_create(file_path[0], course_codes)
+            savename = read_create(file_path[0], course_codes)
+            os.startfile(f"{savename}.xlsx")
             app.destroy()
 
 app = App()
