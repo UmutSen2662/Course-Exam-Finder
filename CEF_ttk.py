@@ -1,9 +1,10 @@
 from glob import glob
-import tkinter.ttk as ttk
 import tkinter as tk
+import tkinter.ttk as ttk
 import openpyxl, csv, os
 
-#Get absolute path to resource, works for dev and for PyInstaller
+
+# Get absolute path to resource, works for dev and for PyInstaller
 def resource_path(relative_path):
     base_path = os.getcwd()
     return glob(base_path + relative_path)
@@ -23,36 +24,47 @@ def read_create(file_path, classes):
 
         workBook = openpyxl.Workbook()
         sheet = workBook.active
-        sheet.column_dimensions['A'].width = 40.0
-        sheet.column_dimensions['B'].width = 20.0
-        sheet.column_dimensions['C'].width = 20.0
-        sheet.column_dimensions['D'].width = 50.0
-        sheet.column_dimensions['E'].width = 80.0
-        
-        sheet.append(("Course Exam", "Days Until", "Days Between", "Start Time", "Classrooms"))
+        sheet.column_dimensions["A"].width = 40.0
+        sheet.column_dimensions["B"].width = 20.0
+        sheet.column_dimensions["C"].width = 20.0
+        sheet.column_dimensions["D"].width = 40.0
+        sheet.column_dimensions["E"].width = 60.0
+        sheet.column_dimensions["F"].width = 10.0
+
+        sheet.append(("Course Exam", "Days Until", "Days Between", "Start Time", "Classrooms", "Grades"))
         for cell in sheet[1]:
             cell.fill = openpyxl.styles.PatternFill(start_color="afafaf", fill_type="solid")
 
         i = 2
         if "Final" in file_path:
             for row in csv_reader:
-                if row[0][:8].replace(" ","").upper() in classes.replace(" ","").upper():
+                if row[0][:8].replace(" ", "").upper() in classes.replace(" ", "").upper():
                     sheet.append((row[0], days_until(i), days_between(i), row[1] + " " + row[2][:5], row[3]))
                     i += 1
         else:
             for row in csv_reader:
-                if row[0][:8].replace(" ","").upper() in classes.replace(" ","").upper():
+                if row[0][:8].replace(" ", "").upper() in classes.replace(" ", "").upper():
                     sheet.append((row[0], days_until(i), days_between(i), row[1], row[3]))
                     i += 1
 
         for row in sheet.iter_rows():
             for cell in row:
                 cell.font = openpyxl.styles.Font(size=16)
-                cell.alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
-                cell.border = openpyxl.styles.Border(left=openpyxl.styles.Side(border_style='medium', color='000000'),
-                                                     right=openpyxl.styles.Side(border_style='medium', color='000000'),
-                                                     top=openpyxl.styles.Side(border_style='medium', color='000000'),
-                                                     bottom=openpyxl.styles.Side(border_style='medium', color='000000'))
+                cell.fill = openpyxl.styles.PatternFill(
+                    start_color=("d0d0d0" if cell.row % 2 == 1 else "ffffff"), fill_type="solid"
+                )
+                cell.alignment = openpyxl.styles.Alignment(
+                    horizontal=("left" if cell.column != 6 else "center"), vertical="center"
+                )
+                cell.border = openpyxl.styles.Border(
+                    left=openpyxl.styles.Side(border_style="medium", color="000000"),
+                    right=openpyxl.styles.Side(border_style="medium", color="000000"),
+                    top=openpyxl.styles.Side(border_style="medium", color="000000"),
+                    bottom=openpyxl.styles.Side(border_style="medium", color="000000"),
+                )
+
+        for i in range(1, sheet.max_row + 1):
+            sheet.row_dimensions[i].height = 26
 
         savename = ""
         if "FINAL" in file_path.upper():
@@ -72,7 +84,7 @@ class App(tk.Tk):
 
         self.configure(bg="#222222")
         self.title("Course Exam Finder")
-        self.minsize(self.winfo_screenwidth()//3, self.winfo_screenheight()//5)
+        self.minsize(self.winfo_screenwidth() // 3, self.winfo_screenheight() // 5)
         style = ttk.Style(self)
         style.configure("TButton", font=(None, 16), background="#222222")
 
@@ -96,7 +108,11 @@ class App(tk.Tk):
         self.bind("<Return>", lambda event: self.create_exam_file())
 
     def delet_entry(self, entry):
-        if entry.get() == "Enter course codes" or entry.get() == "Enter CSV file name" or entry.get() == "No CSV file found":
+        if (
+            entry.get() == "Enter course codes"
+            or entry.get() == "Enter CSV file name"
+            or entry.get() == "No CSV file found"
+        ):
             entry.delete(0, tk.END)
 
     def put_placeholder(self, entry, text):
@@ -106,7 +122,7 @@ class App(tk.Tk):
     def create_exam_file(self):
         course_codes = self.entry1.get()
         csv_name = self.entry2.get()
-        file_path = resource_path("\*"+csv_name+"*.csv")
+        file_path = resource_path("\*" + csv_name + "*.csv")
         if not file_path:
             self.entry2.delete(0, tk.END)
             self.entry2.insert(0, "No CSV file found")
@@ -114,6 +130,7 @@ class App(tk.Tk):
             savename = read_create(file_path[0], course_codes)
             os.startfile(f"{savename}.xlsx")
             app.destroy()
+
 
 app = App()
 app.mainloop()
